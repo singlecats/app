@@ -5,9 +5,11 @@ namespace App\Server;
 use Sunra\PhpSimple\HtmlDomParser;
 use App\Model\books_link;
 use App\Jobs\ProcessPodcast;
+use App\Jobs\addCate;
 use App\Model\book;
 use App\Model\author;
 use Illuminate\Support\Facades\DB;
+use App\Model\article;
 
 /**
  * Class search
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  */
 class search extends base
 {
-    protected $baseUrl = 'http://www.xbiquge.la/';
+    protected $baseUrl = 'http://www.xbiquge.la';
     protected $isFrom = [
         1 => 'www.xbiquge.la'
     ];
@@ -41,7 +43,7 @@ class search extends base
     public function getWebCateUrl()
     {
         $this->requestType = 'cate';
-        return ($this->url = $this->baseUrl . 'xiaoshuodaquan');
+        return ($this->url = $this->baseUrl . '/xiaoshuodaquan');
     }
 
     public function cateHandle()
@@ -56,7 +58,6 @@ class search extends base
                     'isfrom' => 1
                 ];
                 ProcessPodcast::dispatch($data)->onQueue('bqgcate');
-//                die;
             }
         }
         echo 'ok';
@@ -82,11 +83,35 @@ class search extends base
         $cate = $html->find('.con_top a', 2)->plaintext;
         $desc = $html->find('#intro p', 1)->plaintext;
         DB::transaction(function () use ($author, $cate, $desc) {
-            $author = author::firstOrCreate(['name' => $author, 'book_id' => $this->data['book_id']]);
+            $author = author::firstOrCreate(['name' => $author, 'book_id' => 0]);
             book::where('id', $this->data['book_id'])
                 ->update(['cate' => $cate, 'author' => $author->id, 'desc' => $desc]);
         });
+        foreach ($html->find('#list dd a') as $k=> $a) {
+            $data=[
+                'books_link_id'=>$this->data['book_id'],
+                'cate'=>$a->plaintext,
+                'href'=>$a->href,
+                'sort'=>($k+1)
+            ];
+            addCate::dispatch($data)->onQueue('cate');
+        }
+        echo 'ok';
+    }
+    public function getBookContent($data)
+    {
+        $this->requestType = 'last';
+        $this->url = $this->baseUrl.$data['href'];
+        $this->data = $data;
+        $this->sendRequest();
+    }
+    public function lastHandle()
+    {
+        $str = $this->response->getBody();
 
+        $html = HtmlDomParser::str_get_html($str);
+        $text=$html->find('#content',0)->plaintext;
+        article::updateOrCreate(['article_cate_id'=>$this->data['article_cate_id']],['content'=>$text]);
         echo 'ok';
     }
 }
