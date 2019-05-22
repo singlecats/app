@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\DB;
 use App\Model\book;
 use App\Model\books_link;
+use App\Jobs\pageJob;
 
 class ProcessPodcast implements ShouldQueue
 {
@@ -35,11 +36,13 @@ class ProcessPodcast implements ShouldQueue
      */
     public function handle()
     {
-        $link = '';
-        DB::transaction(function () use (&$link) {
+        DB::transaction(function (){
             $book = book::firstOrCreate(['name' => $this->data['text'], 'desc' => '']);
+            $this->data['book_id']=$book->id;
             $link = books_link::updateOrCreate(['link' => $this->data['href'], 'book_id' => $book->id], ['book_id' => $book->id, 'isfrom' => $this->data['isfrom']]);
+            $this->data['linkid']=$link->id;
         });
-        $this->data['linkid']=$link->id;
+
+        pageJob::dispatch($this->data)->onQueue('page');
     }
 }
