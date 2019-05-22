@@ -3,7 +3,8 @@
 namespace App\Server;
 
 use Sunra\PhpSimple\HtmlDomParser;
-use App\Model\book;
+use App\Model\books_link;
+use App\Jobs\ProcessPodcast;
 
 /**
  * Class search
@@ -14,6 +15,9 @@ use App\Model\book;
 class search extends base
 {
     protected $baseUrl = 'http://www.xbiquge.la/';
+    protected $isFrom=[
+        1=> 'www.xbiquge.la'
+    ];
 
     public function __construct()
     {
@@ -39,13 +43,27 @@ class search extends base
 
     public function cateHandle()
     {
-        $html = HtmlDomParser::str_get_html($this->response->getBody());
+        $str =$this->response->getBody();
+        $html = HtmlDomParser::str_get_html($str);
         foreach ($html->find('.novellist ul') as $ul) {
-            foreach ($ul->find('li') as $li) {
-                echo $li;
-//                die;
+            foreach ($ul->find('li>a') as $a) {
+                $data=[
+                    'text'=>$a->plaintext,
+                    'href'=>$a->href,
+                    'isfrom'=>1
+                ];
+                ProcessPodcast::dispatch($data)->onQueue('bqgcate');
             }
         }
+        echo 'ok';
 //        var_dump($html);
+    }
+    public function updateBookLink()
+    {
+        books_link::chunk(200, function ($books) {
+            foreach ($books as $book) {
+                $this->pageUrl=$book->link;
+            }
+        });
     }
 }

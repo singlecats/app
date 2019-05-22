@@ -4,9 +4,8 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
 
-class book extends Model
+class books_link extends Model
 {
-    //
-    protected $table = 'books';
+    protected $table = 'books_link';
     protected $guarded = [];
 }

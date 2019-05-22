@@ -20,5 +20,6 @@ class IndexController extends Controller
     {
         $search =new search();
         $search->getWebCate();
+//        $search->updateBookLink();
     }
 }
