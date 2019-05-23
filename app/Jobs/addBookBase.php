@@ -7,11 +7,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use App\Model\articleCate;
-use App\Jobs\article;
-use Illuminate\Support\Facades\DB;
 
-class addCate implements ShouldQueue
+class addBookBase implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -20,12 +17,11 @@ class addCate implements ShouldQueue
      *
      * @return void
      */
-    public $data = [];
-    public $handle;
-    public function __construct($handle, $data)
+    public $manage;
+
+    public function __construct($manage)
     {
-        $this->handle = $handle;
-        $this->data=$data;
+        $this->manage = $manage;
     }
 
     /**
@@ -36,6 +32,7 @@ class addCate implements ShouldQueue
     public function handle()
     {
         //
-        $this->handle->getChapterList($this->data);
+//        $this->manage->handle->getBooks();
+//        $this->manage->addBooksBase();
     }
 }
