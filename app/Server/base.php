@@ -2,8 +2,11 @@
 
 namespace App\Server;
 
+use Sunra\PhpSimple\HtmlDomParser;
+
 class base
 {
+    public $response = null;
     public function __construct()
     {
         $this->client = new \GuzzleHttp\Client();
@@ -23,5 +26,9 @@ class base
     public function handle()
     {
         $this->{$this->requestType . 'handle'}();
+    }
+    public function buildDom($str)
+    {
+        return HtmlDomParser::str_get_html($str);
     }
 }
