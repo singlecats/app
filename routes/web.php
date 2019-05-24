@@ -17,4 +17,7 @@ Route::get('/', function () {
 	// return view('welcome');
 });
 Route::get('/foo/{id}', 'Home\IndexController@index');
+Route::get('/test',function (){
+    echo 123;
+});
 Route::get('/test', 'Home\IndexController@getChapter');
