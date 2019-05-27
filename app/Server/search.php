@@ -47,6 +47,8 @@ class search extends base implements handle
             $this->buildBookHtml();
         } elseif ($this->step == 2) {
             $this->buildCapterHtml();
+        } elseif ($this->step == 3) {
+            $this->getContentHtml();
         }
     }
 
@@ -189,49 +191,75 @@ class search extends base implements handle
         $author = trim($match[1]);
         $cate = $dom->find('.con_top a', 2)->plaintext;
         $desc = $dom->find('#intro p', 1)->plaintext;
-
-        DB::transaction(function () use ($author, $desc) {
-            $authorId = $this->addAuthor($author);
+        $dataModel = new data();
+        DB::transaction(function () use ($author, $desc, $cate, $dataModel) {
+            $cateData = [
+                'pid' => 0,
+                'name' => str_replace('小说', '', $cate),
+                'level' => 1
+            ];
+            $authorId = $dataModel->addAuthor($author);
+            $cateId = $dataModel->setCate($cateData);
             $bookData = [
                 'author' => $authorId,
+                'category' => $cateId,
                 'desc' => $desc
             ];
-            $this->setBook($this->chapterData['books_id'], $bookData);
+            $dataModel->setBook($this->chapterData['books_id'], $bookData);
         });
+        DB::transaction(function () use ($dataModel, $dom) {
+            foreach ($dom->find('#list dd a') as $k => $a) {
+                $data = [
+                    'books_id' => $this->chapterData['books_id'],
+                    'books_link_id' => $this->chapterData['id'],
+                    'chapter_index' => $k,
+                    'name' => $a->plaintext,
+                    'link' => $this->baseUrl . $a->href,
+                    'sort' => $k
+                ];
+                $dataModel->addChapter($data);
+            }
+        });
+        $dom->clear();
+    }
 
-//        echo $desc;
+    function getContent($from = 1, $booksLinkId = 0, $chapter = 0)
+    {
+        $data = new data();
+        $ret = $data->getBookChapter($from, $booksLinkId, $chapter);
+        $this->url = $ret['link'];
+        $this->contentData = $ret;
+        $this->contentData['from'] = $from;
+        $this->step = 3;
+        $this->sendRequest();
+    }
+
+    public function getContentHtml()
+    {
+        $dom = $this->buildDom($this->response->getBody());
+        $dom->find('#content p', 0)->innertext = '';
+        $text = $dom->find('#content', 0)->plaintext;
+        $dom->clear();
+        $data = new data();
+        $dataArr = [
+            'books_link_id' => $this->contentData['books_link_id'],
+            'chapter_id' => $this->contentData['id'],
+            'content' => $text
+        ];
+        $ret = $data->setContent($dataArr, '_' . $this->contentData['from'], $this->contentData['id']);
+        $this->content = $ret;
+    }
+
+    public function getContentCache($from, $chapter, $booksLinkId)
+    {
+        $data = new data();
+        $ret = $data->getContentCache('_' . $from, $chapter, $booksLinkId);
+        dd($ret);
         die;
-        DB::transaction(function () use ($author, $cate, $desc) {
-            $author = author::firstOrCreate(['name' => $author, 'book_id' => 0]);
-            book::where('id', $this->data['book_id'])
-                ->update(['cate' => $cate, 'author' => $author->id, 'desc' => $desc]);
-        });
-        foreach ($dom->find('#list dd a') as $k => $a) {
-            $data = [
-                'books_link_id' => $this->data['book_id'],
-                'cate' => $a->plaintext,
-                'href' => $a->href,
-                'sort' => ($k + 1)
-            ];
+        if (empty($ret)) {
+            $this->getContent($from, $booksLinkId, $chapter);
+            $ret = $this->content;
         }
-    }
-
-    public function setBook($bookId, $data)
-    {
-        book::where('id', $bookId)
-            ->update($data);
-    }
-
-    public function addAuthor($name)
-    {
-        $oAuthor = author::firstOrCreate([
-            'name' => $name
-        ]);
-        return $oAuthor->id;
-    }
-
-    function getContent()
-    {
-        // TODO: Implement getContent() method.
+        return $ret;
     }
 }

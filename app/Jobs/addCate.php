@@ -22,7 +22,7 @@ class addCate implements ShouldQueue
      */
     public $data = [];
     public $handle;
-    public function __construct($handle, $data)
+    public function __construct($handle,$data)
     {
         $this->handle = $handle;
         $this->data=$data;

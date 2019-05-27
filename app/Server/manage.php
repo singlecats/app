@@ -21,12 +21,13 @@ class manage
     public function addBooksBase()
     {
         if (!empty($this->handle->booksData)) {
+            $data = new data();
             DB::beginTransaction();
             try {
 
                 foreach ($this->handle->booksData as &$v) {
 
-                    $this->addBook($v);
+                    $data->addBook($v);
                 }
                 unset($v);
                 DB::commit();
@@ -36,33 +37,6 @@ class manage
             }
         }
 //        print_r($this->handle->booksData);
-    }
-
-    public function addBook(&$data)
-    {
-        DB::beginTransaction();
-        try {
-            $oBook = book::firstOrCreate(
-                [
-                    'name' => $data['text'],
-                ]
-            );
-            $data['books_id'] = $oBook->id;
-            $oLink = books_link::firstOrCreate(
-                [
-                    'books_id' => $oBook->id,
-                    'from' => $data['isfrom']
-                ],
-                [
-                    'link' => $data['href']
-                ]
-            );
-            $data['books_link_id'] = $oLink->id;
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throwException('事务提交失败');
-        }
     }
 
     public function addCate()

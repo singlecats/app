@@ -21,3 +21,4 @@ Route::get('/test',function (){
     echo 123;
 });
 Route::get('/test', 'Home\IndexController@getChapter');
+Route::get('/test/getContent', 'Home\IndexController@getContent');
