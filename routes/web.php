@@ -16,9 +16,7 @@ Route::get('/', function () {
 	echo 111;
 	// return view('welcome');
 });
-Route::get('/foo/{id}', 'Home\IndexController@index');
-Route::get('/test',function (){
-    echo 123;
-});
-Route::get('/test', 'Home\IndexController@getChapter');
-Route::get('/test/getContent', 'Home\IndexController@getContent');
+Route::get('/getBooks', 'Home\IndexController@index');
+Route::get('/getChapter', 'Home\IndexController@getChapter');
+Route::get('/getContent', 'Home\IndexController@getContent');
+Route::get('/getAllChapter', 'Home\IndexController@getAllChapter');

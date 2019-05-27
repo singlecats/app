@@ -74,7 +74,7 @@ class data
         chapter::updateOrCreate($data);
     }
 
-    public function getBookChapter($from, $booksLinkId)
+    public function getBookChapter($from, $booksLinkId, $chapter)
     {
         $condition = [];
         if (!empty($from)) {
@@ -82,29 +82,51 @@ class data
         }
         if (!empty($booksLinkId)) {
 
-            $condition['id'] = $book;
+            $condition['books_link_id'] = $booksLinkId;
         }
-        $ret = chapter::where($condition)->select('id','books_id', 'books_link_id', 'chapter_index', 'name', 'link')->first()->toArray();
+        if (!empty($chapter)) {
+            $condition['id'] = $chapter;
+        }
+        $ret = chapter::where($condition)->select('id', 'books_id', 'books_link_id', 'chapter_index', 'name', 'link')->first()->toArray();
         return $ret;
     }
+
     public function setContent($data, $from, $id)
     {
         article::suffix($from);
         $oArticle = article::updateOrCreate([
             'chapter_id' => $data['chapter_id'],
             'books_link_id' => $data['books_link_id']
-        ],[
+        ], [
             'content' => $data['content']
         ]);
         return ['id' => $oArticle->id, 'content' => $data['content']];
     }
+
     public function getContentCache($from, $chapter, $booksLinkId)
     {
         article::suffix($from);
         $ret = article::where([
             'chapter_id' => $chapter,
             'books_link_id' => $booksLinkId
-        ])->select('id','content')->first();
+        ])->select('id', 'content')->first();
+        return $ret;
+    }
+
+    public function getAllChapter($from, $link, $order)
+    {
+        chapter::suffix('_' . $from);
+        $orderStr = implode(" ", $order);
+        $ret = [];
+        chapter::where('books_link_id', $link)
+            ->select(['id', 'books_id', 'books_link_id', 'chapter_index', 'name', 'link'])
+            ->orderByRaw($orderStr)
+            ->chunk(100, function ($chapter) use (&$ret, $from) {
+                foreach ($chapter as $k => $v) {
+                    $v->from = $from;
+                    $ret[] = $v->toArray();
+                }
+            });
         return $ret;
     }
 }

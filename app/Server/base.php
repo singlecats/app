@@ -7,6 +7,9 @@ use Sunra\PhpSimple\HtmlDomParser;
 class base
 {
     public $response = null;
+    protected $isFrom = [
+        1 => 'www.xbiquge.la'
+    ];
 
     public function __construct()
     {

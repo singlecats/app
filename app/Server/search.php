@@ -2,15 +2,11 @@
 
 namespace App\Server;
 
-use Sunra\PhpSimple\HtmlDomParser;
 use App\Model\books_link;
 use App\Jobs\ProcessPodcast;
 use App\Jobs\addCate;
-use App\Model\book;
-use App\Model\author;
+
 use Illuminate\Support\Facades\DB;
-use App\Model\article;
-use App\Server\handle;
 
 /**
  * Class search
@@ -21,9 +17,7 @@ use App\Server\handle;
 class search extends base implements handle
 {
     protected $baseUrl = 'http://www.xbiquge.la';
-    protected $isFrom = [
-        1 => 'www.xbiquge.la'
-    ];
+
     protected $from = 1;
     public $booksData = [];
 
@@ -70,93 +64,6 @@ class search extends base implements handle
         $dom->clear();
     }
 
-    /**
-     * public function getWebCate()
-     * {
-     * $url = $this->getWebCateUrl();
-     * $this->sendRequest();
-     * }
-     *
-     * public function getWebPage()
-     * {
-     * $this->requestType = 'page';
-     * }
-     *
-     * public function getWebCateUrl()
-     * {
-     * $this->requestType = 'cate';
-     * return ($this->url = $this->baseUrl . '/xiaoshuodaquan');
-     * }
-     *
-     * public function cateHandle()
-     * {
-     * $str = $this->response->getBody();
-     * $html = HtmlDomParser::str_get_html($str);
-     * foreach ($html->find('.novellist ul') as $ul) {
-     * foreach ($ul->find('li>a') as $a) {
-     * $data = [
-     * 'text' => $a->plaintext,
-     * 'href' => $a->href,
-     * 'isfrom' => 1
-     * ];
-     * ProcessPodcast::dispatch($data)->onQueue('bqgcate');
-     * }
-     * }
-     * echo 'ok';
-     * //        var_dump($html);
-     * }
-     *
-     * public function updateBookLink($data)
-     * {
-     * $this->getWebPage();
-     * $this->url = $data['href'];
-     * $this->data = $data;
-     * $this->sendRequest();
-     *
-     * }
-     *
-     * public function pageHandle()
-     * {
-     * $str = $this->response->getBody();
-     * $html = HtmlDomParser::str_get_html($str);
-     * $author = $html->find('#maininfo p', 0)->plaintext;
-     * preg_match('/：([\x{4e00}-\x{9fa5}]*\w*)/u', $author, $match);
-     * $author = trim($match[1]);
-     * $cate = $html->find('.con_top a', 2)->plaintext;
-     * $desc = $html->find('#intro p', 1)->plaintext;
-     * DB::transaction(function () use ($author, $cate, $desc) {
-     * $author = author::firstOrCreate(['name' => $author, 'book_id' => 0]);
-     * book::where('id', $this->data['book_id'])
-     * ->update(['cate' => $cate, 'author' => $author->id, 'desc' => $desc]);
-     * });
-     * foreach ($html->find('#list dd a') as $k=> $a) {
-     * $data=[
-     * 'books_link_id'=>$this->data['book_id'],
-     * 'cate'=>$a->plaintext,
-     * 'href'=>$a->href,
-     * 'sort'=>($k+1)
-     * ];
-     * addCate::dispatch($data)->onQueue('cate');
-     * }
-     * echo 'ok';
-     * }
-     * public function getBookContent($data)
-     * {
-     * $this->requestType = 'last';
-     * $this->url = $this->baseUrl.$data['href'];
-     * $this->data = $data;
-     * $this->sendRequest();
-     * }
-     * public function lastHandle()
-     * {
-     * $str = $this->response->getBody();
-     *
-     * $html = HtmlDomParser::str_get_html($str);
-     * $text=$html->find('#content',0)->plaintext;
-     * article::updateOrCreate(['article_cate_id'=>$this->data['article_cate_id']],['content'=>$text]);
-     * echo 'ok';
-     * }
-     **/
     public function getChapter($from = 0, $bookId = 0)
     {
         $condition = [];
@@ -170,7 +77,6 @@ class search extends base implements handle
         books_link::where($condition)->chunk(200, function ($oBook) use ($temp) {
             foreach ($oBook as $v) {
                 addCate::dispatch($temp, $v->toArray())->onQueue('chapter');
-                die;
             }
         });
     }
@@ -250,12 +156,10 @@ class search extends base implements handle
         $this->content = $ret;
     }
 
-    public function getContentCache($from, $chapter, $booksLinkId)
+    public function getContentCache($from, $booksLinkId, $chapter)
     {
         $data = new data();
         $ret = $data->getContentCache('_' . $from, $chapter, $booksLinkId);
-        dd($ret);
-        die;
         if (empty($ret)) {
             $this->getContent($from, $booksLinkId, $chapter);
             $ret = $this->content;
