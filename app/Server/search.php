@@ -3,6 +3,7 @@
 namespace App\Server;
 
 use App\Model\books_link;
+use App\Model\book;
 use App\Jobs\ProcessPodcast;
 use App\Jobs\addCate;
 
@@ -70,11 +71,16 @@ class search extends base implements handle
         if (!empty($from)) {
             $condition[] = ['from', $from];
         }
-        if (!empty($linkId)) {
+        if (!empty($bookId)) {
             $condition[] = ['books_id', $bookId];
         }
+        $bookArr = book::where('desc','=','')->pluck('id')->toArray();
         $temp = $this;
-        books_link::where($condition)->chunk(200, function ($oBook) use ($temp) {
+        $bookObj = books_link::where($condition);
+        if (!empty($bookArr)) {
+            $bookObj = $bookObj->whereIn('books_id',$bookArr);
+        }
+        $bookObj->chunk(200, function ($oBook) use ($temp) {
             foreach ($oBook as $v) {
                 addCate::dispatch($temp, $v->toArray())->onQueue('chapter');
             }
@@ -92,11 +98,24 @@ class search extends base implements handle
     public function buildCapterHtml()
     {
         $dom = $this->buildDom($this->response->getBody());
-        $author = $dom->find('#maininfo p', 0)->plaintext;
+        $author = $dom->find('#maininfo', 0)->plaintext;
         preg_match('/：([\x{4e00}-\x{9fa5}]*\w*)/u', $author, $match);
         $author = trim($match[1]);
         $cate = $dom->find('.con_top a', 2)->plaintext;
         $desc = $dom->find('#intro p', 1)->plaintext;
+        $dataArr = [];
+        foreach ($dom->find('#list dd a') as $k => $a) {
+            $data = [
+                'books_id' => $this->chapterData['books_id'],
+                'books_link_id' => $this->chapterData['id'],
+                'chapter_index' => $k,
+                'name' => $a->plaintext,
+                'link' => $this->baseUrl . $a->href,
+                'sort' => $k
+            ];
+            $dataArr[] = $data;
+        }
+        $dom->clear();
         $dataModel = new data();
         DB::transaction(function () use ($author, $desc, $cate, $dataModel) {
             $cateData = [
@@ -113,20 +132,11 @@ class search extends base implements handle
             ];
             $dataModel->setBook($this->chapterData['books_id'], $bookData);
         });
-        DB::transaction(function () use ($dataModel, $dom) {
-            foreach ($dom->find('#list dd a') as $k => $a) {
-                $data = [
-                    'books_id' => $this->chapterData['books_id'],
-                    'books_link_id' => $this->chapterData['id'],
-                    'chapter_index' => $k,
-                    'name' => $a->plaintext,
-                    'link' => $this->baseUrl . $a->href,
-                    'sort' => $k
-                ];
-                $dataModel->addChapter($data);
+        DB::transaction(function () use ($dataModel, $dataArr) {
+            foreach ($dataArr as $v) {
+                $dataModel->addChapter($v);
             }
         });
-        $dom->clear();
     }
 
     function getContent($from = 1, $booksLinkId = 0, $chapter = 0)

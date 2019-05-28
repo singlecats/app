@@ -29,12 +29,12 @@ class IndexController extends Controller
         echo 'ok';
     }
 
-    public function getChapter()
+    public function getChapter(Request $request)
     {
         $search = new search();
         $manage = new manage($search);
-        $from = 0;
-        $bookId = 0;
+        $from = $request->get('from',1);;
+        $bookId = $request->get('bookId',0);;
         $manage->handle->getChapter($from, $bookId);
         echo 'ok';
     }

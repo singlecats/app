@@ -13,6 +13,7 @@ class base
 
     public function __construct()
     {
+        defined('MAX_FILE_SIZE') || define('MAX_FILE_SIZE', 6000000);
 //        $this->client = new \GuzzleHttp\Client();
     }
 
@@ -30,6 +31,7 @@ class base
 
     public function buildDom($str)
     {
+
         return HtmlDomParser::str_get_html($str);
     }
 }
