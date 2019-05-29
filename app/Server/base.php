@@ -14,17 +14,16 @@ class base
     public function __construct()
     {
         defined('MAX_FILE_SIZE') || define('MAX_FILE_SIZE', 6000000);
-//        $this->client = new \GuzzleHttp\Client();
     }
 
-    public function sendRequest($method = 'GET')
+    public function sendRequest($method = 'GET', $func= [])
     {
         $client = new \GuzzleHttp\Client();
         $request = new \GuzzleHttp\Psr7\Request($method, $this->url);
         $temp = $this;
-        $promise = $client->sendAsync($request)->then(function ($response) use ($temp) {
+        $promise = $client->sendAsync($request)->then(function ($response) use ($temp, $func) {
             $temp->response = $response;
-            $temp->handle();
+            $func[0]->{$func[1]}();
         });
         $promise->wait();
     }

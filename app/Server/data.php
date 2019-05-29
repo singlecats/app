@@ -71,7 +71,8 @@ class data
     public function addChapter($data, $suffix = '_1')
     {
         chapter::suffix($suffix);
-        chapter::updateOrCreate($data);
+        $ret = chapter::updateOrCreate($data);
+        return $ret->id;
     }
 
     public function getBookChapter($from, $booksLinkId, $chapter)
@@ -81,13 +82,15 @@ class data
             chapter::suffix('_' . $from);
         }
         if (!empty($booksLinkId)) {
-
-            $condition['books_link_id'] = $booksLinkId;
+            $condition[] = ['books_link_id', '=', $booksLinkId];
         }
         if (!empty($chapter)) {
-            $condition['id'] = $chapter;
+            $condition[] = ['id', '=', $chapter];
         }
-        $ret = chapter::where($condition)->select('id', 'books_id', 'books_link_id', 'chapter_index', 'name', 'link')->first()->toArray();
+        $ret = chapter::where($condition)->select('id', 'books_id', 'books_link_id', 'chapter_index', 'name', 'link')->first();
+        if (!empty($ret)) {
+            $ret = $ret->toArray();
+        }
         return $ret;
     }
 

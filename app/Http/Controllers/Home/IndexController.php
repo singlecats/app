@@ -47,7 +47,6 @@ class IndexController extends Controller
         $search = new search();
         $manage = new manage($search);
         $ret = $manage->handle->getContentCache($from, $booksLinkId, $chapter);
-        return $ret;
     }
 
     public function getAllChapter(Request $request)
@@ -57,5 +56,11 @@ class IndexController extends Controller
         $data = new data();
         $ret = $data->getAllChapter($from, $booksLinkId, ['sort', 'desc']);
         dd($ret);
+    }
+    public function getNewChapter(Request $request)
+    {
+        $booksId = $request->get('bookId');
+        $handle = new search();
+        $handle->updateNewChapter($booksId);
     }
 }

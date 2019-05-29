@@ -7,6 +7,7 @@ use App\Model\book;
 use App\Jobs\ProcessPodcast;
 use App\Jobs\addCate;
 
+use App\Model\chapter;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -32,7 +33,7 @@ class search extends base implements handle
         $this->url = $this->baseUrl . '/xiaoshuodaquan';
         $this->requestType = 'getBooks';
         $this->step = 1;
-        $this->sendRequest();
+        $this->sendRequest('GET', [$this, 'buildBookHtml']);
     }
 
     public function handle()
@@ -74,12 +75,9 @@ class search extends base implements handle
         if (!empty($bookId)) {
             $condition[] = ['books_id', $bookId];
         }
-        $bookArr = book::where('desc','=','')->pluck('id')->toArray();
+
         $temp = $this;
         $bookObj = books_link::where($condition);
-        if (!empty($bookArr)) {
-            $bookObj = $bookObj->whereIn('books_id',$bookArr);
-        }
         $bookObj->chunk(200, function ($oBook) use ($temp) {
             foreach ($oBook as $v) {
                 addCate::dispatch($temp, $v->toArray())->onQueue('chapter');
@@ -91,8 +89,7 @@ class search extends base implements handle
     {
         $this->url = $data['link'];
         $this->chapterData = $data;
-        $this->step = 2;
-        $this->sendRequest();
+        $this->sendRequest('GET', [$this, 'buildCapterHtml']);
     }
 
     public function buildCapterHtml()
@@ -104,7 +101,8 @@ class search extends base implements handle
         $cate = $dom->find('.con_top a', 2)->plaintext;
         $desc = $dom->find('#intro p', 1)->plaintext;
         $dataArr = [];
-        foreach ($dom->find('#list dd a') as $k => $a) {
+        $item = $dom->find('#list dd a');
+        foreach ($item as $k => $a) {
             $data = [
                 'books_id' => $this->chapterData['books_id'],
                 'books_link_id' => $this->chapterData['id'],
@@ -146,8 +144,7 @@ class search extends base implements handle
         $this->url = $ret['link'];
         $this->contentData = $ret;
         $this->contentData['from'] = $from;
-        $this->step = 3;
-        $this->sendRequest();
+        $this->sendRequest('GET', [$this, 'getContentHtml']);
     }
 
     public function getContentHtml()
@@ -175,5 +172,64 @@ class search extends base implements handle
             $ret = $this->content;
         }
         return $ret;
+    }
+
+    public function updateNewChapter($bookId = 0)
+    {
+        $condition = [];
+        if (!empty($bookId)) {
+            $condition['books_id'] = $bookId;
+        }
+
+        $newArr = books_link::where($condition)->select('id', 'books_id', 'from', 'link', 'new_index')->get()->toArray();
+
+        if (!empty($newArr)) {
+            foreach ($newArr as $k => $v) {
+                $index = $v['new_index'];
+                if (empty($v['new_index'])) {
+                    chapter::suffix('_' . $v['from']);
+                    $index = chapter::where(['books_link_id' => $v['id']])->count();
+                }
+                $this->url = $v['link'];
+                $v['index'] = $index;
+                $v['chapter_index'] = $k;
+                $this->chapterData = $v;
+                $this->sendRequest('GET', [$this, 'updateNewGetChapter']);
+            }
+        }
+    }
+
+    public function updateNewGetChapter()
+    {
+        $dom = $this->buildDom($this->response->getBody());
+        $item = $dom->find('#list dd');
+        $dataArr = [];
+        foreach ($item as $k => $a) {
+            if ($k >= $this->chapterData['index']) {
+                $href = $this->baseUrl . $a->children[0]->href;
+                $text = $a->children[0]->plaintext;
+                $data = [
+                    'books_id' => $this->chapterData['books_id'],
+                    'books_link_id' => $this->chapterData['id'],
+                    'chapter_index' => $k,
+                    'name' => $text,
+                    'link' => $href,
+                    'sort' => $k,
+                ];
+                $dataArr[] = $data;
+            }
+        }
+        $dom->clear();
+        $dataModel = new data();
+        DB::transaction(function () use ($dataModel, &$dataArr) {
+            foreach ($dataArr as &$v) {
+                $ret = $dataModel->addChapter($v);
+                $v['id'] = $ret;
+                books_link::where(['books_id' => $v['books_id']])->update(['new_index' => ($v['chapter_index'] + 1)]);
+            }
+            unset($v);
+        });
+        return $dataArr;
+
     }
 }

@@ -20,6 +20,4 @@ Route::get('/getBooks', 'Home\IndexController@index');
 Route::get('/getChapter', 'Home\IndexController@getChapter');
 Route::get('/getContent', 'Home\IndexController@getContent');
 Route::get('/getAllChapter', 'Home\IndexController@getAllChapter');
-Route::get('profile', function () {
-    // 只有认证过的用户可进入...
-})->middleware('auth.basic');
+Route::get('/getNewChapter', 'Home\IndexController@getNewChapter');
