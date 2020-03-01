@@ -6,9 +6,12 @@ use App\Home\User;
 use App\Http\Controllers\Controller;
 use App\Jobs\addBookBase;
 use App\Server\data;
+use App\Server\goodServer;
+use App\Server\httpServer;
 use Illuminate\Http\Request;
 use App\Server\search;
 use App\Server\manage;
+use Illuminate\Support\Facades\Session;
 
 class IndexController extends Controller
 {
@@ -36,7 +39,6 @@ class IndexController extends Controller
         $from = $request->get('from',1);;
         $bookId = $request->get('bookId',0);;
         $manage->handle->getChapter($from, $bookId);
-        echo 12;
         echo 'ok';
     }
 
@@ -63,5 +65,34 @@ class IndexController extends Controller
         $booksId = $request->get('bookId');
         $handle = new search();
         $handle->updateNewChapter($booksId);
+    }
+
+    public function getLoginQrCode()
+    {
+        $http = new httpServer();
+//        echo $http->getStorageCookie();
+        $qrCode = $http->getQrcode();
+        return view('login.login', ['code' => $qrCode, 'token' => Session::get('wlfstk_smdl')]);
+    }
+
+    public function checkQrcode(Request $request)
+    {
+        $http = new httpServer();
+        return $http->checkQrCode($request->token);
+    }
+
+    public function checkTicket(Request $request)
+    {
+        $http = new httpServer();
+        return $http->checkTicket($request->ticket, $request->callback);
+    }
+
+    public function getUser()
+    {
+//        $http = new httpServer();
+//        $ret = $http->getList();
+//        print_r($ret);die;
+        $http = new goodServer();
+        $http->getBuy();
     }
 }

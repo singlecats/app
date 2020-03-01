@@ -12,7 +12,7 @@
 |
  */
 
-Route::get('/', function () {
+Route::get('/test', function () {
 	echo 111;
 	// return view('welcome');
 });
@@ -21,3 +21,7 @@ Route::get('/getChapter', 'Home\IndexController@getChapter');
 Route::get('/getContent', 'Home\IndexController@getContent');
 Route::get('/getAllChapter', 'Home\IndexController@getAllChapter');
 Route::get('/getNewChapter', 'Home\IndexController@getNewChapter');
+Route::get('/login/getLoginQrCode', 'Home\IndexController@getLoginQrCode');
+Route::get('/login/check', 'Home\IndexController@checkQrcode');
+Route::get('/login/checkTicket', 'Home\IndexController@checkTicket');
+Route::get('/getUser', 'Home\IndexController@getUser');
