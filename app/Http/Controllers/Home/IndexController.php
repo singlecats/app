@@ -93,6 +93,6 @@ class IndexController extends Controller
 //        $ret = $http->getList();
 //        print_r($ret);die;
         $http = new goodServer();
-        $http->getBuy();
+        echo $http->checkTime();
     }
 }

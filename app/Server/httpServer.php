@@ -156,10 +156,14 @@ class httpServer
             'headers' => $header,
             'form_params' => $data,
         ]);
-        $code = $response->getStatusCode(); // 200
-        if ($code == 200) {
-            return $this->getContent($response->getBody()->getContents());
+        try {
+            $code = $response->getStatusCode(); // 200
+            if ($code == 200) {
+                return $this->getContent($response->getBody()->getContents());
+            }
+            return [];
+        } catch (\HttpRequestException $e) {
+            return [$e->getMessage()];
         }
-        return [];
     }
 }
