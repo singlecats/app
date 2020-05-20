@@ -78,6 +78,7 @@ class IndexController extends Controller
     public function checkQrcode(Request $request)
     {
         $http = new httpServer();
+        echo 123123;
         return $http->checkQrCode($request->token);
     }
 
