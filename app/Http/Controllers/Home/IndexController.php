@@ -89,7 +89,6 @@ class IndexController extends Controller
 
     public function getUser()
     {
-        echo 415456;
 //        $http = new httpServer();
 //        $ret = $http->getList();
 //        print_r($ret);die;
