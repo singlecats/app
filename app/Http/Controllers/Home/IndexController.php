@@ -68,7 +68,6 @@ class IndexController extends Controller
         $booksLinkId = $request->get('linkId');
         $data = new data();
         $ret = $data->getAllChapter($from, $booksLinkId, ['sort', 'desc']);
-        echo 'test1';
         dd($ret);
     }
     public function getNewChapter(Request $request)
