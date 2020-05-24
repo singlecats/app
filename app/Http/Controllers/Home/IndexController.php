@@ -31,6 +31,7 @@ class IndexController extends Controller
         $manage->addBooksBase();
         echo 1111;
         echo 22;
+        echo 333;
         echo 'ok';
     }
 
