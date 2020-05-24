@@ -34,6 +34,7 @@ class IndexController extends Controller
         echo 333;
         echo 55;
         echo 666;
+        echo 77;
         echo 'ok';
     }
 
