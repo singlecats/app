@@ -58,6 +58,7 @@ class IndexController extends Controller
         $search = new search();
         $manage = new manage($search);
         $ret = $manage->handle->getContentCache($from, $booksLinkId, $chapter);
+        echo 'test';
     }
 
     public function getAllChapter(Request $request)
