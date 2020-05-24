@@ -105,6 +105,7 @@ class IndexController extends Controller
 //        $http = new httpServer();
 //        $ret = $http->getList();
 //        print_r($ret);die;
+        echo 'master02';
         $http = new goodServer();
         echo $http->checkTime();
     }
