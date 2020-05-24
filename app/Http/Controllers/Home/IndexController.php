@@ -47,7 +47,6 @@ class IndexController extends Controller
         $from = $request->get('from',1);;
         $bookId = $request->get('bookId',0);;
         $manage->handle->getChapter($from, $bookId);
-        echo 'test';
         echo 'ok';
     }
 
