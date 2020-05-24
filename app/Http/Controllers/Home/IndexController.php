@@ -96,6 +96,7 @@ class IndexController extends Controller
     public function checkTicket(Request $request)
     {
         $http = new httpServer();
+        echo 'mast01';
         return $http->checkTicket($request->ticket, $request->callback);
     }
 
