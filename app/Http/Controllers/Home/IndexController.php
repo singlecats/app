@@ -68,6 +68,7 @@ class IndexController extends Controller
         $booksLinkId = $request->get('linkId');
         $data = new data();
         $ret = $data->getAllChapter($from, $booksLinkId, ['sort', 'desc']);
+        echo 'test1';
         dd($ret);
     }
     public function getNewChapter(Request $request)
@@ -75,6 +76,7 @@ class IndexController extends Controller
         $booksId = $request->get('bookId');
         $handle = new search();
         $handle->updateNewChapter($booksId);
+        echo 'ret-2';
     }
 
     public function getLoginQrCode()
