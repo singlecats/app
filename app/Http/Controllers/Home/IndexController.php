@@ -76,7 +76,6 @@ class IndexController extends Controller
         $booksId = $request->get('bookId');
         $handle = new search();
         $handle->updateNewChapter($booksId);
-        echo 'ret-2';
     }
 
     public function getLoginQrCode()
